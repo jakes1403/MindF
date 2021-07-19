@@ -351,3 +351,5 @@ MigrationBackup/
 
 # Jakes-specific
 LostKng.bf
+/mandelbrot.b
+/test.bf

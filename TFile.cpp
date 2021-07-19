@@ -67,8 +67,12 @@ namespace Thruster
 		TFile file;
 		file.Size = data.length();
 		file.Data = (unsigned char*)malloc(file.Size);
+		if (file.Data == NULL)
+		{
+			printf("Failure Allocating String\n");
+		}
 
-		for (int i = 0; i < data.length(); i++)
+		for (size_t i = 0; i < data.length(); i++)
 		{
 			file.Data[i] = data[i];
 		}
