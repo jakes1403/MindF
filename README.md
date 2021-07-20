@@ -1,3 +1,5 @@
+<img align="left" src="https://github.com/jakes1403/MindForn/blob/main/res/mflogo.png?raw=true" width="512" height="512"/>
+
 # MindForn
 MindForn - An optimizing BrainF*** language interpreter.
 
