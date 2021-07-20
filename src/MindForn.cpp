@@ -9,50 +9,10 @@
 
 using namespace std;
 
-const unsigned int MACHINE_SIZE = 30000;
+// Number of Cells to use in the BrainF virtual machine:
+const size_t MACHINE_SIZE = 30000;
 
-//string vectorToBrainF(vector<unsigned char> vec)
-//{
-//    string code = "";
-//    unsigned int sum = 0;
-//    for (int i = 0; i < vec.size(); i++)
-//    {
-//        sum += vec[i];
-//    }
-//    unsigned char avg = sum / vec.size();
-//    int shiftsRight = 0;
-//    for (int i = 0; i < vec.size(); i++)
-//    {
-//        for (int v = 0; v < avg; v++)
-//        {
-//            code += "+";
-//        }
-//        code += ">";
-//        shiftsRight++;
-//    }
-//    for (int i = 0; i < shiftsRight; i++)
-//    {
-//        code += "<";
-//    }
-//    for (int i = 0; i < vec.size(); i++)
-//    {
-//        for (int v = 0; v < vec[i] - avg; v++)
-//        {
-//            if (vec[i] - avg > 0)
-//            {
-//                code += "+";
-//            }
-//            if (vec[i] - avg < 0)
-//            {
-//                code += "-";
-//            }
-//        }
-//        code += ">";
-//        shiftsRight++;
-//    }
-//    return code;
-//}
-
+// Convert a string into BrainF code that prints the given string in the current cell
 string textToBrainF(string text)
 {
     string code = "";
@@ -91,6 +51,7 @@ string textToBrainF(string text)
     return code;
 }
 
+// Instructions name enum
 enum Instructions
 {
     INCBY = 1,
@@ -105,6 +66,7 @@ enum Instructions
     READ = 10
 };
 
+// Convert instruction enum to string
 string INS_TO_STRING(char s)
 {
     switch (s)
@@ -166,19 +128,21 @@ string INS_TO_STRING(char s)
     }
 }
 
+// The instruction format for the optimizer
 struct Instruction
 {
     char opcode;
-    unsigned int data;
+    size_t data;
 };
 
+// BrainF program optimizer - Optimizes brainf code into vector of instructions
 vector<Instruction> OptimizeProgram(string prog)
 {
     vector<Instruction> optimizedList;
     string progCleaned = "";
     // First step - Remove all comments, etc and make sure all brackets have a closer
     int checkCounter = 0;
-    for (unsigned int pc = 0; pc < prog.size(); pc++)
+    for (size_t pc = 0; pc < prog.size(); pc++)
     {
         switch (prog[pc])
         {
@@ -232,14 +196,14 @@ vector<Instruction> OptimizeProgram(string prog)
         }
     }
     // Step 2 - Create program and merge repeated operations
-    for (unsigned int i = 0; i < progCleaned.size(); i++)
+    for (size_t i = 0; i < progCleaned.size(); i++)
     {
         Instruction ins;
         switch (progCleaned[i])
         {
         case '>':
         {
-            unsigned int counter = 0;
+            size_t counter = 0;
             for (; progCleaned[i++] == '>'; counter++);
             ins.opcode = INCCELLBY;
             ins.data = counter;
@@ -248,7 +212,7 @@ vector<Instruction> OptimizeProgram(string prog)
         }
         case '<':
         {
-            unsigned int counter = 0;
+            size_t counter = 0;
             for (; progCleaned[i++] == '<'; counter++);
             ins.opcode = DECCELLBY;
             ins.data = counter;
@@ -257,7 +221,7 @@ vector<Instruction> OptimizeProgram(string prog)
         }
         case '+':
         {
-            unsigned int counter = 0;
+            size_t counter = 0;
             for (; progCleaned[i++] == '+'; counter++);
             ins.opcode = INCBY;
             ins.data = counter;
@@ -266,7 +230,7 @@ vector<Instruction> OptimizeProgram(string prog)
         }
         case '-':
         {
-            unsigned int counter = 0;
+            size_t counter = 0;
             for (; progCleaned[i++] == '-'; counter++);
             ins.opcode = DECBY;
             ins.data = counter;
@@ -300,15 +264,14 @@ vector<Instruction> OptimizeProgram(string prog)
     // Start optimizing
     size_t currentSize = optimizedList.size();
     size_t newSize = 0;
-    //cout << "start real opto\n";
     // Do while needs to be optmized
+    // Really simple (to me at least) optimizations.
     while (newSize - currentSize != 0)
     {
         NumOptPasses++;
         currentSize = optimizedList.size();
         for (size_t i = 0; i < optimizedList.size(); i++)
         {
-            //cout << i << " " << INS_TO_STRING(optimizedList[i].opcode) << " - " << to_string(optimizedList[i].data) << endl;
             if (optimizedList[i].opcode == STARTLOOP && optimizedList.size() > i + 2)
             {
                 if (optimizedList[i + 1].opcode == DECBY || optimizedList[i + 1].opcode == INCBY && optimizedList[i + 1].data == 1)
@@ -458,12 +421,9 @@ vector<Instruction> OptimizeProgram(string prog)
             }
         }
         newSize = optimizedList.size();
-        //cout << "Optimized once" << endl;
     }
-    //cout << "end real opto\n";
     // End optimizing
     // FINAL step - set up jumps for each loop
-    //cout << "Start loopset\n";
     for (int i = 0; i < optimizedList.size(); i++)
     {
         switch (optimizedList[i].opcode) {
@@ -481,7 +441,6 @@ vector<Instruction> OptimizeProgram(string prog)
                 {
                     matchCounter--;
                 }
-                //cout << "progCleaned " << progCleaned[peek] << "\ncounter " << matchCounter << endl;
             }
             optimizedList[i].data = peek - 1;
             break;
@@ -500,27 +459,20 @@ vector<Instruction> OptimizeProgram(string prog)
                 {
                     matchCounter++;
                 }
-                //cout << "progCleaned " << progCleaned[peek] << "\ncounter " << matchCounter << endl;
             }
             optimizedList[i].data = peek + 1;
             break;
-            //cout << progCleaned[peek + 1] << endl;
         }
         }
     }
-    //cout << "End loopset\n";
-    //for (int i = 0; i < optimizedList.size(); i++)
-    //{
-    //    cout << i << " " << INS_TO_STRING(optimizedList[i].opcode) << " - " << to_string(optimizedList[i].data) << endl;
-    //}
-    //cout << "Optimized to " << optimizedList.size() << " instructions. (versus " << progCleaned.size() << " raw)" << endl;
     return optimizedList;
 }
 
+// Run optimized BrainF program
 void RunOptimized(vector<Instruction> optimizedList)
 {
     unsigned char* machine = static_cast<unsigned char*>(malloc(MACHINE_SIZE));
-    unsigned int currentCell = 0;
+    size_t currentCell = 0;
     if (machine != NULL)
     {
         memset(machine, 0, MACHINE_SIZE);
@@ -531,7 +483,7 @@ void RunOptimized(vector<Instruction> optimizedList)
         exit(-1);
     }
 
-    for (unsigned int pc = 0; pc < optimizedList.size(); pc++)
+    for (size_t pc = 0; pc < optimizedList.size(); pc++)
     {
         switch (optimizedList[pc].opcode)
         {
@@ -596,6 +548,7 @@ void RunOptimized(vector<Instruction> optimizedList)
     free(machine);
 }
 
+// Old code - just to compare speed to optimized version. Runs BF string directly
 void RunRaw(string prog)
 {
     unsigned char* machine = static_cast<unsigned char*>(malloc(MACHINE_SIZE));
@@ -608,8 +561,8 @@ void RunRaw(string prog)
         cout << "Error allocating cells!" << endl;
         exit(-1);
     }
-    unsigned int currentCell = 0;
-    for (unsigned int pc = 0; pc < prog.size(); pc++)
+    size_t currentCell = 0;
+    for (size_t pc = 0; pc < prog.size(); pc++)
     {
         switch (prog[pc])
         {
@@ -648,7 +601,7 @@ void RunRaw(string prog)
             if (machine[currentCell] == 0)
             {
                 int matchCounter = 1;
-                int peek;
+                size_t peek;
                 for (peek = pc + 1; matchCounter != 0; peek++)
                 {
                     if (prog[peek] == '[')
@@ -669,7 +622,7 @@ void RunRaw(string prog)
             if (machine[currentCell] != 0)
             {
                 int matchCounter = 1;
-                int peek;
+                size_t peek;
                 for (peek = pc - 1; matchCounter != 0; peek--)
                 {
                     if (prog[peek] == '[')
@@ -690,10 +643,11 @@ void RunRaw(string prog)
     free(machine);
 }
 
+// Old but currently only version that works - Compiles bf string directly to a string containing C++ but with no optimizations (should be fine tbh the C++ compiler is really good)
 string CompileRawToCPP(string prog)
 {
     string compiled = "// Generated by MindForn\n//\n\n#include <iostream>\nusing namespace std;int main(int argc, char* argv[]){unsigned char m[" + to_string(MACHINE_SIZE) + "];memset(m, 0, " + to_string(MACHINE_SIZE) + ");unsigned char* c = &m[0];";
-    for (unsigned int progIndex = 0; progIndex < prog.size(); progIndex++)
+    for (size_t progIndex = 0; progIndex < prog.size(); progIndex++)
     {
         switch (prog[progIndex])
         {
@@ -748,6 +702,12 @@ int main(int argc, char* argv[])
     string prog;
     string outputFile;
     bool compileMode = false;
+    // Process arguments
+    // Supplying arguments:
+    // MindForn.exe -c file.bf file.cpp
+    // ^ Compile file.bf to file.cpp
+    // MindForn.exe file.bf
+    // ^ Run file.bf
     if (argc != 1)
     {
         if (argc == 2)
@@ -783,7 +743,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        prog = textToBrainF("Welcome to MindForn!\nNo program loaded.\n");
+        prog = textToBrainF("Welcome to MindForn!\nNo program loaded.\nArgs:\n\t-c [file] [output] - compile file to C++\n\t[file path] - run file");
     }
     if (compileMode)
     {
